@@ -39,25 +39,38 @@ int ler_linha_segura(const char *mensagem, char *destino, size_t tamanho)
 }
 
 /*
- * Le um inteiro com strtol, validando que a linha inteira e numerica.
+ * Converte um texto em inteiro com strtol, validando que o texto inteiro
+ * e numerico. E o unico lugar do programa que usa strtol para inteiros.
+ * Parametros: texto - texto a converter; valor - destino do resultado.
+ * Retorna: 1 se o texto e um inteiro valido; 0 caso contrario.
+ */
+int texto_para_inteiro(const char *texto, int *valor)
+{
+    char *fim = NULL;
+    long convertido = strtol(texto, &fim, 10);
+    int valido = 0;
+
+    if (fim != texto && *fim == '\0') {
+        *valor = (int)convertido;
+        valido = 1;
+    }
+    return valido;
+}
+
+/*
+ * Le uma linha e a converte em inteiro (usa texto_para_inteiro).
  * Parametros: mensagem - prompt; valor - destino do resultado.
- * Retorna: 1 se valido; 0 se invalido ou EOF.
+ * Retorna: 1 se valido; 0 se o texto nao e um inteiro; -1 se a entrada acabou (EOF).
  */
 int ler_inteiro_seguro(const char *mensagem, int *valor)
 {
     char entrada[TAMANHO_ENTRADA];
-    char *fim = NULL;
-    long convertido = 0;
-    int valido = 0;
+    int resultado = -1;
 
     if (ler_linha_segura(mensagem, entrada, sizeof(entrada))) {
-        convertido = strtol(entrada, &fim, 10);
-        if (fim != entrada && *fim == '\0') {
-            *valor = (int)convertido;
-            valido = 1;
-        }
+        resultado = texto_para_inteiro(entrada, valor);
     }
-    return valido;
+    return resultado;
 }
 
 /*
@@ -119,19 +132,13 @@ static void exibir_menu(void)
  */
 static int ler_opcao_menu(void)
 {
-    char entrada[TAMANHO_ENTRADA];
     int opcao = 0;
-    int leu = ler_linha_segura("Opcao: ", entrada, sizeof(entrada));
-    char *fim = NULL;
-    long convertido;
+    int situacao = ler_inteiro_seguro("Opcao: ", &opcao);
 
-    if (leu == 0) {
+    if (situacao == -1) {
         opcao = OPCAO_ENCERRAR;
-    } else {
-        convertido = strtol(entrada, &fim, 10);
-        if (fim != entrada && *fim == '\0') {
-            opcao = (int)convertido;
-        }
+    } else if (situacao == 0) {
+        opcao = 0;
     }
     return opcao;
 }
@@ -246,16 +253,14 @@ static void tratar_remocao_alimento(NoCategoria **categorias, int *dados_modific
 {
     NoCategoria *escolhida = escolher_categoria(*categorias);
     char entrada[TAMANHO_ENTRADA];
-    char *fim = NULL;
-    long numero = 0;
+    int numero = 0;
     int removido = 0;
 
     if (escolhida != NULL) {
         listar_alimentos_alfabetico(escolhida);
         if (ler_linha_segura("Numero ou descricao exata do alimento: ", entrada, sizeof(entrada))) {
-            numero = strtol(entrada, &fim, 10);
-            if (fim != entrada && *fim == '\0') {
-                removido = remover_alimento(escolhida, (int)numero, NULL);
+            if (texto_para_inteiro(entrada, &numero)) {
+                removido = remover_alimento(escolhida, numero, NULL);
             } else {
                 removido = remover_alimento(escolhida, 0, entrada);
             }

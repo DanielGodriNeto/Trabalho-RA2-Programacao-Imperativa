@@ -12,7 +12,10 @@
 /* Le uma linha do teclado sem estourar o buffer; devolve 0 em fim de entrada (EOF). */
 int ler_linha_segura(const char *mensagem, char *destino, size_t tamanho);
 
-/* Le um inteiro validado; devolve 1 se valido, 0 se invalido ou EOF. */
+/* Converte texto em inteiro; devolve 1 se o texto inteiro e numerico, 0 caso contrario. */
+int texto_para_inteiro(const char *texto, int *valor);
+
+/* Le um inteiro validado; devolve 1 se valido, 0 se invalido, -1 em fim de entrada (EOF). */
 int ler_inteiro_seguro(const char *mensagem, int *valor);
 
 /* Le um numero decimal (aceita ponto ou virgula); devolve 1 se valido, 0 caso contrario. */
