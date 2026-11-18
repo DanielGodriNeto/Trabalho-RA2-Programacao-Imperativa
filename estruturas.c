@@ -14,21 +14,21 @@
 static void abortar_sem_memoria(void)
 {
     fprintf(stderr, "Erro critico: memoria insuficiente (malloc/calloc falhou).\n");
-    exit(EXIT_FAILURE);
+    exit(1);
 }
 
 /*
- * Extrai o proximo caractere do texto ja convertido para letra minuscula e
+ * Extrai o proximo caractere do texto ja convertido para letra maiuscula e
  * sem acento, avancando o ponteiro de leitura:
- *  - Letras comuns (ASCII, 1 byte): usa tolower() e avanca 1 byte.
+ *  - Letras comuns (ASCII, 1 byte): usa toupper() e avanca 1 byte.
  *  - Letras acentuadas em UTF-8 (2 bytes): no portugues, toda letra acentuada
  *    comeca pelo byte 0xC3 seguido de um segundo byte que identifica a letra.
- *    Se o segundo byte for maiusculo (0x80 a 0x9F, como 'A' ou 'O' acentuados),
- *    soma-se 0x20 (32) para obter o equivalente minusculo, e entao mapeia-se
- *    cada faixa de vogal acentuada (ou 'c' cedilha) para sua letra base sem
- *    acento ('a', 'c', 'e', 'i', 'n', 'o', 'u'), avancando 2 bytes.
+ *    Se o segundo byte for minusculo (0xA0 a 0xBF, como 'a' ou 'o' acentuados),
+ *    subtrai-se 0x20 (32) para obter o equivalente maiusculo, e entao mapeia-se
+ *    cada faixa de vogal acentuada (ou 'C' cedilha) para sua letra base sem
+ *    acento ('A', 'C', 'E', 'I', 'N', 'O', 'U'), avancando 2 bytes.
  * Parametro: texto - endereco do ponteiro de leitura (avancado pela funcao).
- * Retorna: codigo da letra minuscula sem acento, ou 0 no fim da string ('\0').
+ * Retorna: codigo da letra maiuscula sem acento, ou 0 no fim da string ('\0').
  */
 static int proximo_caractere_normalizado(const char **texto)
 {
@@ -38,31 +38,31 @@ static int proximo_caractere_normalizado(const char **texto)
 
     if (posicao[0] == 0xC3 && posicao[1] != '\0') {
         segundo_byte = posicao[1];
-        /* Converte acentuada maiuscula (ex.: 'A', 'O') para minuscula (+32) */
-        if (segundo_byte >= 0x80 && segundo_byte <= 0x9F) {
-            segundo_byte = (unsigned char)(segundo_byte + 0x20);
+        /* Converte acentuada minuscula (ex.: 'a', 'o') para maiuscula (-32) */
+        if (segundo_byte >= 0xA0) {
+            segundo_byte = (unsigned char)(segundo_byte - 0x20);
         }
-        /* Troca a letra acentuada minuscula pela letra base sem acento */
-        if (segundo_byte >= 0xA0 && segundo_byte <= 0xA5) {
-            caractere = 'a';   /* a com crase, agudo, circunflexo ou til */
-        } else if (segundo_byte == 0xA7) {
-            caractere = 'c';   /* c cedilha */
-        } else if (segundo_byte >= 0xA8 && segundo_byte <= 0xAB) {
-            caractere = 'e';   /* e com crase, agudo ou circunflexo */
-        } else if (segundo_byte >= 0xAC && segundo_byte <= 0xAF) {
-            caractere = 'i';   /* i acentuado */
-        } else if (segundo_byte == 0xB1) {
-            caractere = 'n';   /* n com til */
-        } else if (segundo_byte >= 0xB2 && segundo_byte <= 0xB6) {
-            caractere = 'o';   /* o com crase, agudo, circunflexo ou til */
-        } else if (segundo_byte >= 0xB9 && segundo_byte <= 0xBC) {
-            caractere = 'u';   /* u com agudo ou trema */
+        /* Troca a letra acentuada maiuscula pela letra base sem acento */
+        if (segundo_byte >= 0x80 && segundo_byte <= 0x85) {
+            caractere = 'A';   /* A com crase, agudo, circunflexo ou til */
+        } else if (segundo_byte == 0x87) {
+            caractere = 'C';   /* C cedilha */
+        } else if (segundo_byte >= 0x88 && segundo_byte <= 0x8B) {
+            caractere = 'E';   /* E com crase, agudo ou circunflexo */
+        } else if (segundo_byte >= 0x8C && segundo_byte <= 0x8F) {
+            caractere = 'I';   /* I acentuado */
+        } else if (segundo_byte == 0x91) {
+            caractere = 'N';   /* N com til */
+        } else if (segundo_byte >= 0x92 && segundo_byte <= 0x96) {
+            caractere = 'O';   /* O com crase, agudo, circunflexo ou til */
+        } else if (segundo_byte >= 0x99 && segundo_byte <= 0x9C) {
+            caractere = 'U';   /* U com agudo ou trema */
         } else {
             caractere = segundo_byte;
         }
         *texto += 2;
     } else if (posicao[0] != '\0') {
-        caractere = tolower(posicao[0]);
+        caractere = toupper(posicao[0]);
         *texto += 1;
     }
     return caractere;
@@ -141,7 +141,7 @@ NoCategoria *obter_ou_criar_categoria(NoCategoria **inicio, CategoriaAlimento ca
             abortar_sem_memoria();
         }
         novo->categoria = categoria;
-        snprintf(novo->nome, TAMANHO_NOME_CATEGORIA, "%s", nome);
+        strcpy(novo->nome, nome);
         novo->proximo = *cursor;   /* o novo no aponta para o sucessor */
         *cursor = novo;            /* o antecessor (ou o inicio) aponta para o novo */
         resultado = novo;
@@ -275,7 +275,7 @@ NoCategoria *carregar_dados_bin(const char *caminho_bin)
 
     if (arquivo == NULL) {
         fprintf(stderr, "Erro: nao foi possivel abrir '%s'. Execute o P1 antes.\n", caminho_bin);
-        exit(EXIT_FAILURE);
+        exit(1);
     }
 
     while (fread(&registro, sizeof(registro), 1, arquivo) == 1) {
@@ -419,7 +419,7 @@ int gravar_dados_bin(const char *caminho_bin, const NoCategoria *inicio)
 
     if (arquivo == NULL) {
         fprintf(stderr, "Erro: nao foi possivel gravar '%s'.\n", caminho_bin);
-        exit(EXIT_FAILURE);
+        exit(1);
     }
     while (categoria != NULL) {
         alimento = categoria->lista_alimentos;
