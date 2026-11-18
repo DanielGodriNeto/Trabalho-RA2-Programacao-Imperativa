@@ -73,8 +73,7 @@ int linha_csv_para_registro(const char *linha, RegistroAlimento *registro) {
         }
         descricao[j] = '\0';
         if (linha[i] == ';' && j > 0)
-            campos_restantes = sscanf(linha + i + 1, "%f;%f;%d",
-                                      &energia, &proteina, &categoria_id);
+            campos_restantes = sscanf(linha + i + 1, "%f;%f;%d", &energia, &proteina, &categoria_id);
     }
 
     if (campos_restantes == 3 && categoria_id >= CATEGORIA_MINIMA && categoria_id <= CATEGORIA_MAXIMA) {
