@@ -149,7 +149,7 @@ static void exibir_menu() {
  * Le a opcao do menu. Fim de entrada equivale a escolher a opcao 9.
  * Retorna: opcao digitada; 0 se invalida; 9 em EOF.
  */
-static int ler_opcao_menu(void) {
+static int ler_opcao_menu() {
     int opcao = 0;
     int situacao = ler_inteiro_seguro("Opcao: ", &opcao);
 
