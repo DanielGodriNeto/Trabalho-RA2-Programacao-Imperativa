@@ -9,6 +9,7 @@
 
 #define TAMANHO_ENTRADA 256
 #define OPCAO_ENCERRAR 9
+#define LARGURA_DESCRICAO 64
 
 /*
  * Le uma linha com fgets e remove o '\n' final.
@@ -106,8 +107,20 @@ int ler_decimal_seguro(const char *mensagem, float *valor)
  */
 static void imprimir_alimento(const RegistroAlimento *alimento)
 {
-    printf("  %3d | %-62s | %7.1f kcal | %6.1f g\n",
-           alimento->numero, alimento->descricao,
+    const char *letra = alimento->descricao;
+    int largura = LARGURA_DESCRICAO;
+
+    /* Em UTF-8, cada letra acentuada do portugues comeca com o byte 0xC3 e
+       ocupa 2 bytes na memoria, mas apenas 1 coluna na tela. Somamos 1 na
+       largura para cada byte 0xC3, mantendo as colunas alinhadas na tela. */
+    while (*letra != '\0') {
+        if ((unsigned char)*letra == 0xC3) {
+            largura++;
+        }
+        letra++;
+    }
+    printf("  %3d | %-*s | %7.1f kcal | %6.1f g\n",
+           alimento->numero, largura, alimento->descricao,
            alimento->energia_kcal, alimento->proteina_g);
 }
 
