@@ -4,6 +4,16 @@
 Formato: numero;descricao;energia_kcal;proteina_g;categoria_id  (UTF-8, separador ';')
 As colunas sao identificadas pela posicao horizontal no PDF, de modo que celulas
 vazias (ex.: alimentos 259, 450, 472, 516...) nao deslocam os valores.
+
+Convencoes da Tabela TACO (nota de rodape da pagina 68 do PDF oficial):
+ - NA (nao aplicavel): convertido para 0.0 (ex.: proteina em azeites/oleos
+   #259, #260, #267..#272 e aguardente #472; energia/proteina nos sais #516 e #517).
+ - Tr (traco): convertido para 0.0 (valores abaixo do limite de quantificacao
+   ou arredondados a zero, ex.: #258, #263..#266, #473).
+ - * (analises sendo reavaliadas): o PDF oficial da TACO 4a ed. nao informa
+   valores numericos de energia nem de proteina para 4 alimentos (#450 Iogurte
+   sabor abacaxi, #457 Leite de vaca desnatado UHT, #458 Leite de vaca integral
+   e #591 Coco verde cru); convertidos para 0.0.
 Uso: py extrair_taco.py [caminho_do_pdf]
 """
 import re
@@ -26,18 +36,22 @@ X_DESC = (110, 375)   # faixa horizontal da descricao
 
 
 def categoria_de(numero):
+    categoria = 0
     for ini, fim, cat in FAIXAS:
         if ini <= numero <= fim:
-            return cat
-    raise ValueError("numero fora das faixas: %d" % numero)
+            categoria = cat
+    if categoria == 0:
+        raise ValueError("numero fora das faixas: %d" % numero)
+    return categoria
 
 
 def para_float(token):
     """Converte token da TACO para float; NA, Tr, * e vazio viram 0.0."""
     limpo = re.sub(r"[^0-9,.\-]", "", token.replace("*", ""))
-    if limpo in ("", "-", ".", ","):
-        return 0.0
-    return float(limpo.replace(",", "."))
+    valor = 0.0
+    if limpo not in ("", "-", ".", ","):
+        valor = float(limpo.replace(",", "."))
+    return valor
 
 
 def main():
@@ -46,31 +60,30 @@ def main():
     with pdfplumber.open(PDF) as pdf:
         for pagina in pdf.pages[27:72]:
             texto = pagina.extract_text() or ""
-            if "Descrição dos alimentos" not in texto:
-                continue  # paginas impares (minerais/vitaminas) nao interessam
-            linhas = {}
-            for w in pagina.extract_words():
-                linhas.setdefault(round(w["top"] / 3), []).append(w)
-            for chave in sorted(linhas):
-                palavras = sorted(linhas[chave], key=lambda w: w["x0"])
-                prim = palavras[0]
-                desc = [w["text"] for w in palavras if X_DESC[0] <= w["x0"] and w["x1"] < X_DESC[1]]
-                eh_item = (prim["x0"] < 105 and re.fullmatch(r"\d{1,3}", prim["text"])
-                           and 1 <= int(prim["text"]) <= 597 and int(prim["text"]) not in registros)
-                if eh_item:
-                    numero = int(prim["text"])
-                    kcal = [w["text"] for w in palavras if X_KCAL[0] <= w["x0"] < X_KCAL[1]]
-                    prot = [w["text"] for w in palavras if X_PROT[0] <= w["x0"] < X_PROT[1]]
-                    registros[numero] = [" ".join(desc),
-                                         para_float(kcal[0]) if kcal else 0.0,
-                                         para_float(prot[0]) if prot else 0.0,
-                                         categoria_de(numero)]
-                    ultimo = numero
-                elif (ultimo is not None and desc and len(desc) == len(palavras)
-                      and palavras[0]["x0"] >= X_DESC[0] and palavras[0]["text"][0].islower()
-                      and chave != 0):
-                    # continuacao de descricao quebrada em duas linhas
-                    registros[ultimo][0] += " " + " ".join(desc)
+            if "Descrição dos alimentos" in texto:
+                linhas = {}
+                for w in pagina.extract_words():
+                    linhas.setdefault(round(w["top"] / 3), []).append(w)
+                for chave in sorted(linhas):
+                    palavras = sorted(linhas[chave], key=lambda w: w["x0"])
+                    prim = palavras[0]
+                    desc = [w["text"] for w in palavras if X_DESC[0] <= w["x0"] and w["x1"] < X_DESC[1]]
+                    eh_item = (prim["x0"] < 105 and re.fullmatch(r"\d{1,3}", prim["text"])
+                               and 1 <= int(prim["text"]) <= 597 and int(prim["text"]) not in registros)
+                    if eh_item:
+                        numero = int(prim["text"])
+                        kcal = [w["text"] for w in palavras if X_KCAL[0] <= w["x0"] < X_KCAL[1]]
+                        prot = [w["text"] for w in palavras if X_PROT[0] <= w["x0"] < X_PROT[1]]
+                        registros[numero] = [" ".join(desc),
+                                             para_float(kcal[0]) if kcal else 0.0,
+                                             para_float(prot[0]) if prot else 0.0,
+                                             categoria_de(numero)]
+                        ultimo = numero
+                    elif (ultimo is not None and desc and len(desc) == len(palavras)
+                          and palavras[0]["x0"] >= X_DESC[0] and palavras[0]["text"][0].islower()
+                          and chave != 0):
+                        # continuacao de descricao quebrada em duas linhas
+                        registros[ultimo][0] += " " + " ".join(desc)
     faltando = [n for n in range(1, 598) if n not in registros]
     if faltando:
         print("FALTANDO:", faltando)
