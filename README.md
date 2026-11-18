@@ -12,8 +12,7 @@ Implementação em C (padrão C99) dos programas **P1** e **P2** sobre os 597 al
 - `P1.c`: contém exclusivamente a função `main` do Programa 1 (`alimentos.csv` → `dados.bin`).
 - `P2.c`: contém exclusivamente a função `main` do Programa 2 (carrega `dados.bin`, executa o menu, atualiza `dados.bin` se houve remoção e libera 100% da memória *heap*).
 - `Makefile`: compilação com `gcc -Wall -Wextra -pedantic -std=c99`.
-- `alimentos.csv`: base com os 597 alimentos extraídos da Tabela 1 da TACO (`numero;descricao;energia_kcal;proteina_g;categoria_id`).
-- `extrair_taco.py`: script Python que extrai os 597 alimentos do PDF oficial da TACO pelas coordenadas horizontais das colunas.
+- `alimentos.csv`: base com os 597 alimentos transcritos da Tabela 1 da TACO (`numero;descricao;energia_kcal;proteina_g;categoria_id`). É a fonte dos dados: o projeto é só C, o P1 lê este CSV.
 
 ---
 
