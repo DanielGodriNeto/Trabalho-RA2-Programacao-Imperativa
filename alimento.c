@@ -34,13 +34,11 @@ static const char *const NOMES_CATEGORIAS[CATEGORIA_MAXIMA + 1] = {
  * Parametro: categoria - valor do enumerado.
  * Retorna: string constante; valores fora do intervalo geram "Categoria desconhecida".
  */
-const char *nome_categoria(CategoriaAlimento categoria)
-{
+const char *nome_categoria(CategoriaAlimento categoria) {
     const char *nome = NOMES_CATEGORIAS[0];
 
-    if (categoria >= CATEGORIA_MINIMA && categoria <= CATEGORIA_MAXIMA) {
+    if (categoria >= CATEGORIA_MINIMA && categoria <= CATEGORIA_MAXIMA)
         nome = NOMES_CATEGORIAS[categoria];
-    }
     return nome;
 }
 
@@ -50,8 +48,7 @@ const char *nome_categoria(CategoriaAlimento categoria)
  * Parametros: linha - texto da linha; registro - destino a preencher.
  * Retorna: 1 se valida; 0 se invalida (o registro nao e alterado).
  */
-int linha_csv_para_registro(const char *linha, RegistroAlimento *registro)
-{
+int linha_csv_para_registro(const char *linha, RegistroAlimento *registro) {
     int numero = 0;
     int categoria_id = 0;
     float energia = 0.0f;
@@ -68,29 +65,25 @@ int linha_csv_para_registro(const char *linha, RegistroAlimento *registro)
     descricao[0] = '\0';
     campos_lidos = sscanf(linha, "%d", &numero);
     if (campos_lidos == 1) {
-        while (linha[i] != ';' && linha[i] != '\0') {
+        while (linha[i] != ';' && linha[i] != '\0')
             i++;
-        }
-        if (linha[i] == ';') {
+        if (linha[i] == ';')
             i++;
-        }
         while (j < TAMANHO_DESCRICAO - 1 && linha[i] != ';' && linha[i] != '\0') {
             descricao[j] = linha[i];
             j++;
             i++;
         }
         descricao[j] = '\0';
-        if (linha[i] == ';' && j > 0) {
+        if (linha[i] == ';' && j > 0)
             campos_restantes = sscanf(linha + i + 1, "%f;%f;%d",
                                       &energia, &proteina, &categoria_id);
-        }
     }
 
     if (campos_restantes == 3 && categoria_id >= CATEGORIA_MINIMA && categoria_id <= CATEGORIA_MAXIMA) {
         bytes = (unsigned char *)registro;
-        for (k = 0; k < (int)sizeof(*registro); k++) {
+        for (k = 0; k < (int)sizeof(*registro); k++)
             bytes[k] = 0;
-        }
         registro->numero = numero;
         strcpy(registro->descricao, descricao);
         registro->energia_kcal = energia;
@@ -106,8 +99,7 @@ int linha_csv_para_registro(const char *linha, RegistroAlimento *registro)
  * Parametros: caminho_csv - entrada; caminho_bin - saida.
  * Retorna: numero de registros gravados. Falha de abertura => exit(1).
  */
-int converter_csv_para_binario(const char *caminho_csv, const char *caminho_bin)
-{
+int converter_csv_para_binario(const char *caminho_csv, const char *caminho_bin) {
     FILE *arquivo_csv = fopen(caminho_csv, "r");
     FILE *arquivo_bin = NULL;
     char linha[TAMANHO_LINHA_CSV];

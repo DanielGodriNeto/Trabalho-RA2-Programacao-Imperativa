@@ -11,8 +11,7 @@
 /*
  * Encerra o programa quando malloc/calloc falha (memoria insuficiente).
  */
-static void abortar_sem_memoria(void)
-{
+static void abortar_sem_memoria(void) {
     fprintf(stderr, "Erro critico: memoria insuficiente (malloc/calloc falhou).\n");
     exit(1);
 }
@@ -30,8 +29,7 @@ static void abortar_sem_memoria(void)
  * Parametro: texto - endereco do ponteiro de leitura (avancado pela funcao).
  * Retorna: codigo da letra maiuscula sem acento, ou 0 no fim da string ('\0').
  */
-static int proximo_caractere_normalizado(const char **texto)
-{
+static int proximo_caractere_normalizado(const char **texto) {
     const unsigned char *posicao = (const unsigned char *)*texto;
     unsigned char segundo_byte = 0;
     int caractere = 0;
@@ -39,27 +37,25 @@ static int proximo_caractere_normalizado(const char **texto)
     if (posicao[0] == 0xC3 && posicao[1] != '\0') {
         segundo_byte = posicao[1];
         /* Converte acentuada minuscula (ex.: 'a', 'o') para maiuscula (-32) */
-        if (segundo_byte >= 0xA0) {
+        if (segundo_byte >= 0xA0)
             segundo_byte = (unsigned char)(segundo_byte - 0x20);
-        }
         /* Troca a letra acentuada maiuscula pela letra base sem acento */
-        if (segundo_byte >= 0x80 && segundo_byte <= 0x85) {
+        if (segundo_byte >= 0x80 && segundo_byte <= 0x85)
             caractere = 'A';   /* A com crase, agudo, circunflexo ou til */
-        } else if (segundo_byte == 0x87) {
+        else if (segundo_byte == 0x87)
             caractere = 'C';   /* C cedilha */
-        } else if (segundo_byte >= 0x88 && segundo_byte <= 0x8B) {
+        else if (segundo_byte >= 0x88 && segundo_byte <= 0x8B)
             caractere = 'E';   /* E com crase, agudo ou circunflexo */
-        } else if (segundo_byte >= 0x8C && segundo_byte <= 0x8F) {
+        else if (segundo_byte >= 0x8C && segundo_byte <= 0x8F)
             caractere = 'I';   /* I acentuado */
-        } else if (segundo_byte == 0x91) {
+        else if (segundo_byte == 0x91)
             caractere = 'N';   /* N com til */
-        } else if (segundo_byte >= 0x92 && segundo_byte <= 0x96) {
+        else if (segundo_byte >= 0x92 && segundo_byte <= 0x96)
             caractere = 'O';   /* O com crase, agudo, circunflexo ou til */
-        } else if (segundo_byte >= 0x99 && segundo_byte <= 0x9C) {
+        else if (segundo_byte >= 0x99 && segundo_byte <= 0x9C)
             caractere = 'U';   /* U com agudo ou trema */
-        } else {
+        else
             caractere = segundo_byte;
-        }
         *texto += 2;
     } else if (posicao[0] != '\0') {
         caractere = toupper(posicao[0]);
@@ -80,8 +76,7 @@ static int proximo_caractere_normalizado(const char **texto)
  * Parametros: texto_a, texto_b - strings terminadas em '\0'.
  * Retorna: <0 se texto_a vem antes, 0 se iguais, >0 se texto_a vem depois.
  */
-int comparar_texto_alfabetico(const char *texto_a, const char *texto_b)
-{
+int comparar_texto_alfabetico(const char *texto_a, const char *texto_b) {
     const char *leitura_a = texto_a;
     const char *leitura_b = texto_b;
     int caractere_a = proximo_caractere_normalizado(&leitura_a);
@@ -93,9 +88,8 @@ int comparar_texto_alfabetico(const char *texto_a, const char *texto_b)
         caractere_b = proximo_caractere_normalizado(&leitura_b);
     }
     resultado = caractere_a - caractere_b;
-    if (resultado == 0) {
+    if (resultado == 0)
         resultado = strcmp(texto_a, texto_b);
-    }
     return resultado;
 }
 
@@ -104,13 +98,11 @@ int comparar_texto_alfabetico(const char *texto_a, const char *texto_b)
  * Parametros: inicio - primeiro no; categoria - valor do enumerado procurado.
  * Retorna: no encontrado ou NULL.
  */
-NoCategoria *buscar_categoria(NoCategoria *inicio, CategoriaAlimento categoria)
-{
+NoCategoria *buscar_categoria(NoCategoria *inicio, CategoriaAlimento categoria) {
     NoCategoria *atual = inicio;
 
-    while (atual != NULL && atual->categoria != categoria) {
+    while (atual != NULL && atual->categoria != categoria)
         atual = atual->proximo;
-    }
     return atual;
 }
 
@@ -121,25 +113,22 @@ NoCategoria *buscar_categoria(NoCategoria *inicio, CategoriaAlimento categoria)
  *             categoria - categoria desejada.
  * Retorna: no da categoria (existente ou recem-criado).
  */
-NoCategoria *obter_ou_criar_categoria(NoCategoria **inicio, CategoriaAlimento categoria)
-{
+NoCategoria *obter_ou_criar_categoria(NoCategoria **inicio, CategoriaAlimento categoria) {
     const char *nome = nome_categoria(categoria);
     NoCategoria **cursor = inicio;
     NoCategoria *resultado = NULL;
     NoCategoria *novo = NULL;
 
     /* Avanca ate a primeira posicao cujo nome nao seja menor que o novo */
-    while (*cursor != NULL && comparar_texto_alfabetico((*cursor)->nome, nome) < 0) {
+    while (*cursor != NULL && comparar_texto_alfabetico((*cursor)->nome, nome) < 0)
         cursor = &(*cursor)->proximo;
-    }
 
     if (*cursor != NULL && (*cursor)->categoria == categoria) {
         resultado = *cursor;
     } else {
         novo = (NoCategoria *)calloc(1, sizeof(NoCategoria));
-        if (novo == NULL) {
+        if (novo == NULL)
             abortar_sem_memoria();
-        }
         novo->categoria = categoria;
         strcpy(novo->nome, nome);
         novo->proximo = *cursor;   /* o novo no aponta para o sucessor */
@@ -154,20 +143,17 @@ NoCategoria *obter_ou_criar_categoria(NoCategoria **inicio, CategoriaAlimento ca
  * descricao dentro da lista da categoria.
  * Parametros: categoria - no dono da lista; registro - dados a copiar.
  */
-void inserir_alimento_ordenado(NoCategoria *categoria, const RegistroAlimento *registro)
-{
+void inserir_alimento_ordenado(NoCategoria *categoria, const RegistroAlimento *registro) {
     NoAlimento **cursor = &categoria->lista_alimentos;
     NoAlimento *novo = (NoAlimento *)malloc(sizeof(NoAlimento));
 
-    if (novo == NULL) {
+    if (novo == NULL)
         abortar_sem_memoria();
-    }
     novo->dados = *registro;
 
     while (*cursor != NULL &&
-           comparar_texto_alfabetico((*cursor)->dados.descricao, registro->descricao) <= 0) {
+           comparar_texto_alfabetico((*cursor)->dados.descricao, registro->descricao) <= 0)
         cursor = &(*cursor)->proximo;
-    }
     novo->proximo = *cursor;
     *cursor = novo;
 }
@@ -179,13 +165,11 @@ void inserir_alimento_ordenado(NoCategoria *categoria, const RegistroAlimento *r
  *             alimento - no da lista ligada correspondente.
  * Retorna: raiz da (sub)arvore apos a insercao.
  */
-NoArvore *inserir_na_arvore(NoArvore *raiz, float chave, NoAlimento *alimento)
-{
+NoArvore *inserir_na_arvore(NoArvore *raiz, float chave, NoAlimento *alimento) {
     if (raiz == NULL) {
         raiz = (NoArvore *)malloc(sizeof(NoArvore));
-        if (raiz == NULL) {
+        if (raiz == NULL)
             abortar_sem_memoria();
-        }
         raiz->chave = chave;
         raiz->alimento = alimento;
         raiz->esquerda = NULL;
@@ -203,8 +187,7 @@ NoArvore *inserir_na_arvore(NoArvore *raiz, float chave, NoAlimento *alimento)
  * Os alimentos apontados NAO sao liberados (pertencem a lista ligada).
  * Parametro: raiz - raiz da arvore (NULL e aceito).
  */
-void liberar_arvore(NoArvore *raiz)
-{
+void liberar_arvore(NoArvore *raiz) {
     if (raiz != NULL) {
         liberar_arvore(raiz->esquerda);
         liberar_arvore(raiz->direita);
@@ -216,8 +199,7 @@ void liberar_arvore(NoArvore *raiz)
  * Libera (free) cada no de uma lista ligada de alimentos.
  * Parametro: inicio - primeiro no (NULL e aceito).
  */
-void liberar_lista_alimentos(NoAlimento *inicio)
-{
+void liberar_lista_alimentos(NoAlimento *inicio) {
     NoAlimento *atual = inicio;
     NoAlimento *proximo = NULL;
 
@@ -232,8 +214,7 @@ void liberar_lista_alimentos(NoAlimento *inicio)
  * Libera as arvores de energia e proteina da categoria e zera os ponteiros.
  * Parametro: categoria - no da categoria.
  */
-void liberar_arvores_categoria(NoCategoria *categoria)
-{
+void liberar_arvores_categoria(NoCategoria *categoria) {
     liberar_arvore(categoria->arvore_energia);
     liberar_arvore(categoria->arvore_proteina);
     categoria->arvore_energia = NULL;
@@ -245,8 +226,7 @@ void liberar_arvores_categoria(NoCategoria *categoria)
  * e insere cada alimento da lista nas arvores de energia e de proteina.
  * Parametro: categoria - no da categoria.
  */
-void construir_arvores_categoria(NoCategoria *categoria)
-{
+void construir_arvores_categoria(NoCategoria *categoria) {
     NoAlimento *alimento = NULL;
 
     liberar_arvores_categoria(categoria);
@@ -266,8 +246,7 @@ void construir_arvores_categoria(NoCategoria *categoria)
  * Parametro: caminho_bin - arquivo binario gerado por P1.
  * Retorna: primeiro no da lista Categorias. Falha de abertura => exit.
  */
-NoCategoria *carregar_dados_bin(const char *caminho_bin)
-{
+NoCategoria *carregar_dados_bin(const char *caminho_bin) {
     FILE *arquivo = fopen(caminho_bin, "rb");
     NoCategoria *inicio = NULL;
     NoCategoria *categoria = NULL;
@@ -296,8 +275,7 @@ NoCategoria *carregar_dados_bin(const char *caminho_bin)
  * Percurso em ordem decrescente: direita, raiz, esquerda.
  * Parametros: raiz - arvore; visitar - funcao chamada para cada alimento.
  */
-void percorrer_decrescente(const NoArvore *raiz, VisitanteAlimento visitar)
-{
+void percorrer_decrescente(const NoArvore *raiz, VisitanteAlimento visitar) {
     if (raiz != NULL) {
         percorrer_decrescente(raiz->direita, visitar);
         visitar(&raiz->alimento->dados);
@@ -311,21 +289,18 @@ void percorrer_decrescente(const NoArvore *raiz, VisitanteAlimento visitar)
  * Os alimentos saem em ordem crescente de chave.
  * Retorna: quantidade de alimentos visitados.
  */
-int percorrer_intervalo(const NoArvore *raiz, float minimo, float maximo, VisitanteAlimento visitar)
-{
+int percorrer_intervalo(const NoArvore *raiz, float minimo, float maximo, VisitanteAlimento visitar) {
     int encontrados = 0;
 
     if (raiz != NULL) {
-        if (raiz->chave >= minimo) {
+        if (raiz->chave >= minimo)
             encontrados += percorrer_intervalo(raiz->esquerda, minimo, maximo, visitar);
-        }
         if (raiz->chave >= minimo && raiz->chave <= maximo) {
             visitar(&raiz->alimento->dados);
             encontrados++;
         }
-        if (raiz->chave <= maximo) {
+        if (raiz->chave <= maximo)
             encontrados += percorrer_intervalo(raiz->direita, minimo, maximo, visitar);
-        }
     }
     return encontrados;
 }
@@ -333,8 +308,7 @@ int percorrer_intervalo(const NoArvore *raiz, float minimo, float maximo, Visita
 /*
  * Conta os alimentos da lista de uma categoria.
  */
-int contar_alimentos(const NoCategoria *categoria)
-{
+int contar_alimentos(const NoCategoria *categoria) {
     int total = 0;
     const NoAlimento *atual = categoria->lista_alimentos;
 
@@ -351,15 +325,13 @@ int contar_alimentos(const NoCategoria *categoria)
  * Parametros: inicio - endereco do ponteiro do primeiro no; categoria - alvo.
  * Retorna: quantidade de alimentos liberados (0 se a categoria nao existia).
  */
-int remover_categoria(NoCategoria **inicio, CategoriaAlimento categoria)
-{
+int remover_categoria(NoCategoria **inicio, CategoriaAlimento categoria) {
     NoCategoria **cursor = inicio;
     NoCategoria *alvo = NULL;
     int removidos = 0;
 
-    while (*cursor != NULL && (*cursor)->categoria != categoria) {
+    while (*cursor != NULL && (*cursor)->categoria != categoria)
         cursor = &(*cursor)->proximo;
-    }
     if (*cursor != NULL) {
         alvo = *cursor;
         *cursor = alvo->proximo;            /* desliga o no da lista */
@@ -378,22 +350,19 @@ int remover_categoria(NoCategoria **inicio, CategoriaAlimento categoria)
  *             descricao - descricao exata (usada quando numero <= 0).
  * Retorna: 1 se removeu, 0 se nao encontrou.
  */
-int remover_alimento(NoCategoria *categoria, int numero, const char *descricao)
-{
+int remover_alimento(NoCategoria *categoria, int numero, const char *descricao) {
     NoAlimento **cursor = &categoria->lista_alimentos;
     NoAlimento *alvo = NULL;
     int achou = 0;
 
     while (*cursor != NULL && achou == 0) {
-        if (numero > 0) {
+        if (numero > 0)
             achou = ((*cursor)->dados.numero == numero);
-        } else {
+        else
             achou = (descricao != NULL &&
                      comparar_texto_alfabetico((*cursor)->dados.descricao, descricao) == 0);
-        }
-        if (achou == 0) {
+        if (achou == 0)
             cursor = &(*cursor)->proximo;
-        }
     }
     if (achou == 1) {
         liberar_arvores_categoria(categoria);   /* as arvores apontam para o no a ser liberado */
@@ -410,8 +379,7 @@ int remover_alimento(NoCategoria *categoria, int numero, const char *descricao)
  * Parametros: caminho_bin - arquivo a sobrescrever; inicio - lista Categorias.
  * Retorna: total de registros gravados. Falha de abertura => exit.
  */
-int gravar_dados_bin(const char *caminho_bin, const NoCategoria *inicio)
-{
+int gravar_dados_bin(const char *caminho_bin, const NoCategoria *inicio) {
     FILE *arquivo = fopen(caminho_bin, "wb");
     const NoCategoria *categoria = inicio;
     const NoAlimento *alimento = NULL;
@@ -439,8 +407,7 @@ int gravar_dados_bin(const char *caminho_bin, const NoCategoria *inicio)
  * a lista de alimentos e o no; ao final zera o ponteiro inicial.
  * Parametro: inicio - endereco do ponteiro para a lista Categorias.
  */
-void liberar_todas_categorias(NoCategoria **inicio)
-{
+void liberar_todas_categorias(NoCategoria **inicio) {
     NoCategoria *atual = *inicio;
     NoCategoria *proxima = NULL;
 

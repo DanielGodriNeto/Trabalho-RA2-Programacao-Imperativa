@@ -17,14 +17,12 @@
  *             do chamador; tamanho - capacidade do buffer.
  * Retorna: 1 se leu uma linha; 0 se a entrada terminou (EOF).
  */
-int ler_linha_segura(const char *mensagem, char *destino, int tamanho)
-{
+int ler_linha_segura(const char *mensagem, char *destino, int tamanho) {
     int leu = 0;
     int comprimento;
 
-    if (mensagem != NULL) {
+    if (mensagem != NULL)
         printf("%s", mensagem);
-    }
     if (fgets(destino, tamanho, stdin) != NULL) {
         comprimento = strlen(destino);
         while (comprimento > 0 && (destino[comprimento - 1] == '\n' || destino[comprimento - 1] == '\r')) {
@@ -44,26 +42,21 @@ int ler_linha_segura(const char *mensagem, char *destino, int tamanho)
  * Parametros: texto - texto a converter; valor - destino do resultado.
  * Retorna: 1 se o texto e um inteiro valido; 0 caso contrario.
  */
-int texto_para_inteiro(const char *texto, int *valor)
-{
+int texto_para_inteiro(const char *texto, int *valor) {
     int inicio = 0;
     int i;
     int valido = 1;
 
-    if (texto[0] == '-' || texto[0] == '+') {
+    if (texto[0] == '-' || texto[0] == '+')
         inicio = 1;
-    }
     for (i = inicio; texto[i] != '\0'; i++) {
-        if (texto[i] < '0' || texto[i] > '9') {
+        if (texto[i] < '0' || texto[i] > '9')
             valido = 0;
-        }
     }
-    if (i - inicio < 1 || i - inicio > 9) {
+    if (i - inicio < 1 || i - inicio > 9)
         valido = 0;
-    }
-    if (valido) {
+    if (valido)
         *valor = atoi(texto);
-    }
     return valido;
 }
 
@@ -72,14 +65,12 @@ int texto_para_inteiro(const char *texto, int *valor)
  * Parametros: mensagem - prompt; valor - destino do resultado.
  * Retorna: 1 se valido; 0 se o texto nao e um inteiro; -1 se a entrada acabou (EOF).
  */
-int ler_inteiro_seguro(const char *mensagem, int *valor)
-{
+int ler_inteiro_seguro(const char *mensagem, int *valor) {
     char entrada[TAMANHO_ENTRADA];
     int resultado = -1;
 
-    if (ler_linha_segura(mensagem, entrada, TAMANHO_ENTRADA)) {
+    if (ler_linha_segura(mensagem, entrada, TAMANHO_ENTRADA))
         resultado = texto_para_inteiro(entrada, valor);
-    }
     return resultado;
 }
 
@@ -89,8 +80,7 @@ int ler_inteiro_seguro(const char *mensagem, int *valor)
  * Parametros: mensagem - prompt; valor - destino do resultado.
  * Retorna: 1 se valido; 0 se invalido ou EOF.
  */
-int ler_decimal_seguro(const char *mensagem, float *valor)
-{
+int ler_decimal_seguro(const char *mensagem, float *valor) {
     char entrada[TAMANHO_ENTRADA];
     int inicio = 0;
     int i;
@@ -100,27 +90,22 @@ int ler_decimal_seguro(const char *mensagem, float *valor)
 
     if (ler_linha_segura(mensagem, entrada, TAMANHO_ENTRADA)) {
         valido = 1;
-        if (entrada[0] == '-' || entrada[0] == '+') {
+        if (entrada[0] == '-' || entrada[0] == '+')
             inicio = 1;
-        }
         for (i = inicio; entrada[i] != '\0'; i++) {
-            if (entrada[i] == ',') {
+            if (entrada[i] == ',')
                 entrada[i] = '.';
-            }
-            if (entrada[i] == '.') {
+            if (entrada[i] == '.')
                 pontos++;
-            } else if (entrada[i] >= '0' && entrada[i] <= '9') {
+            else if (entrada[i] >= '0' && entrada[i] <= '9')
                 digitos++;
-            } else {
+            else
                 valido = 0;
-            }
         }
-        if (digitos == 0 || pontos > 1) {
+        if (digitos == 0 || pontos > 1)
             valido = 0;
-        }
-        if (valido) {
+        if (valido)
             sscanf(entrada, "%f", valor);
-        }
     }
     return valido;
 }
@@ -129,8 +114,7 @@ int ler_decimal_seguro(const char *mensagem, float *valor)
  * Funcao de visita: imprime uma linha com os dados de um alimento.
  * Parametro: alimento - registro a exibir (somente leitura).
  */
-static void imprimir_alimento(const RegistroAlimento *alimento)
-{
+static void imprimir_alimento(const RegistroAlimento *alimento) {
     const char *letra = alimento->descricao;
     int largura = LARGURA_DESCRICAO;
 
@@ -138,9 +122,8 @@ static void imprimir_alimento(const RegistroAlimento *alimento)
        ocupa 2 bytes na memoria, mas apenas 1 coluna na tela. Somamos 1 na
        largura para cada byte 0xC3, mantendo as colunas alinhadas na tela. */
     while (*letra != '\0') {
-        if ((unsigned char)*letra == 0xC3) {
+        if ((unsigned char)*letra == 0xC3)
             largura++;
-        }
         letra++;
     }
     printf("  %3d | %-*s | %7.1f kcal | %6.1f g\n",
@@ -149,8 +132,7 @@ static void imprimir_alimento(const RegistroAlimento *alimento)
 }
 
 /* Exibe o menu principal com as 9 opcoes. */
-static void exibir_menu(void)
-{
+static void exibir_menu(void) {
     printf("\n===== TACO - MENU =====\n");
     printf("1 - Listar categorias\n");
     printf("2 - Listar alimentos de uma categoria (ordem alfabetica)\n");
@@ -167,16 +149,14 @@ static void exibir_menu(void)
  * Le a opcao do menu. Fim de entrada equivale a escolher a opcao 9.
  * Retorna: opcao digitada; 0 se invalida; 9 em EOF.
  */
-static int ler_opcao_menu(void)
-{
+static int ler_opcao_menu(void) {
     int opcao = 0;
     int situacao = ler_inteiro_seguro("Opcao: ", &opcao);
 
-    if (situacao == -1) {
+    if (situacao == -1)
         opcao = OPCAO_ENCERRAR;
-    } else if (situacao == 0) {
+    else if (situacao == 0)
         opcao = 0;
-    }
     return opcao;
 }
 
@@ -184,8 +164,7 @@ static int ler_opcao_menu(void)
  * Opcao 1: lista as categorias na ordem da lista ligada Categorias.
  * Parametro: inicio - primeiro no da lista.
  */
-static void listar_categorias(const NoCategoria *inicio)
-{
+static void listar_categorias(const NoCategoria *inicio) {
     const NoCategoria *atual = inicio;
 
     printf("\nCategorias (ordem alfabetica):\n");
@@ -200,16 +179,14 @@ static void listar_categorias(const NoCategoria *inicio)
  * Parametro: inicio - primeiro no da lista.
  * Retorna: no encontrado ou NULL (mensagem de erro ja exibida).
  */
-static NoCategoria *escolher_categoria(NoCategoria *inicio)
-{
+static NoCategoria *escolher_categoria(NoCategoria *inicio) {
     int identificador = 0;
     NoCategoria *encontrada = NULL;
 
     if (ler_inteiro_seguro("Informe o numero da categoria [1-15] (a opcao 1 mostra a lista): ", &identificador) == 1) {
         encontrada = buscar_categoria(inicio, (CategoriaAlimento)identificador);
-        if (encontrada == NULL) {
+        if (encontrada == NULL)
             printf("Categoria %d inexistente (ou ja removida).\n", identificador);
-        }
     } else {
         printf("Entrada invalida.\n");
     }
@@ -219,8 +196,7 @@ static NoCategoria *escolher_categoria(NoCategoria *inicio)
 /*
  * Opcao 2: lista os alimentos na ordem alfabetica da lista ligada.
  */
-static void listar_alimentos_alfabetico(const NoCategoria *categoria)
-{
+static void listar_alimentos_alfabetico(const NoCategoria *categoria) {
     const NoAlimento *atual = categoria->lista_alimentos;
 
     printf("\n%s - ordem alfabetica:\n", categoria->nome);
@@ -234,8 +210,7 @@ static void listar_alimentos_alfabetico(const NoCategoria *categoria)
  * Opcoes 3 e 4: lista em ordem decrescente usando a arvore indicada.
  * Parametros: categoria - para o titulo; arvore - indice a percorrer; rotulo - "energia"/"proteina".
  */
-static void listar_decrescente(const NoCategoria *categoria, const NoArvore *arvore, const char *rotulo)
-{
+static void listar_decrescente(const NoCategoria *categoria, const NoArvore *arvore, const char *rotulo) {
     printf("\n%s - %s decrescente:\n", categoria->nome, rotulo);
     percorrer_decrescente(arvore, imprimir_alimento);
 }
@@ -244,8 +219,7 @@ static void listar_decrescente(const NoCategoria *categoria, const NoArvore *arv
  * Opcoes 5 e 6: pede minimo e maximo e lista os alimentos no intervalo
  * usando a busca com poda na arvore indicada.
  */
-static void listar_intervalo(const NoCategoria *categoria, const NoArvore *arvore, const char *rotulo)
-{
+static void listar_intervalo(const NoCategoria *categoria, const NoArvore *arvore, const char *rotulo) {
     float minimo = 0.0f;
     float maximo = 0.0f;
     int encontrados;
@@ -266,8 +240,7 @@ static void listar_intervalo(const NoCategoria *categoria, const NoArvore *arvor
 /*
  * Opcao 7: remove uma categoria inteira e marca dados_modificados.
  */
-static void tratar_remocao_categoria(NoCategoria **categorias, int *dados_modificados)
-{
+static void tratar_remocao_categoria(NoCategoria **categorias, int *dados_modificados) {
     NoCategoria *escolhida = escolher_categoria(*categorias);
     CategoriaAlimento identificador;
     int removidos;
@@ -285,8 +258,7 @@ static void tratar_remocao_categoria(NoCategoria **categorias, int *dados_modifi
  * Opcao 8: remove um alimento por numero ou descricao exata.
  * Se a categoria ficar vazia, ela tambem e removida.
  */
-static void tratar_remocao_alimento(NoCategoria **categorias, int *dados_modificados)
-{
+static void tratar_remocao_alimento(NoCategoria **categorias, int *dados_modificados) {
     NoCategoria *escolhida = escolher_categoria(*categorias);
     char entrada[TAMANHO_ENTRADA];
     int numero = 0;
@@ -295,11 +267,10 @@ static void tratar_remocao_alimento(NoCategoria **categorias, int *dados_modific
     if (escolhida != NULL) {
         listar_alimentos_alfabetico(escolhida);
         if (ler_linha_segura("Numero ou descricao exata do alimento: ", entrada, TAMANHO_ENTRADA)) {
-            if (texto_para_inteiro(entrada, &numero)) {
+            if (texto_para_inteiro(entrada, &numero))
                 removido = remover_alimento(escolhida, numero, NULL);
-            } else {
+            else
                 removido = remover_alimento(escolhida, 0, entrada);
-            }
         }
         if (removido == 1) {
             printf("Alimento removido; arvores de energia e proteina reconstruidas.\n");
@@ -319,8 +290,7 @@ static void tratar_remocao_alimento(NoCategoria **categorias, int *dados_modific
  * Parametros: categorias - endereco do ponteiro da lista (pode mudar com a opcao 7);
  *             dados_modificados - flag que passa a 1 se algo for removido.
  */
-void executar_menu(NoCategoria **categorias, int *dados_modificados)
-{
+void executar_menu(NoCategoria **categorias, int *dados_modificados) {
     int opcao = 0;
     NoCategoria *categoria = NULL;
 
@@ -338,17 +308,16 @@ void executar_menu(NoCategoria **categorias, int *dados_modificados)
             } else {
                 categoria = escolher_categoria(*categorias);
                 if (categoria != NULL) {
-                    if (opcao == 2) {
+                    if (opcao == 2)
                         listar_alimentos_alfabetico(categoria);
-                    } else if (opcao == 3) {
+                    else if (opcao == 3)
                         listar_decrescente(categoria, categoria->arvore_energia, "energia (kcal)");
-                    } else if (opcao == 4) {
+                    else if (opcao == 4)
                         listar_decrescente(categoria, categoria->arvore_proteina, "proteina (g)");
-                    } else if (opcao == 5) {
+                    else if (opcao == 5)
                         listar_intervalo(categoria, categoria->arvore_energia, "energia (kcal)");
-                    } else {
+                    else
                         listar_intervalo(categoria, categoria->arvore_proteina, "proteina (g)");
-                    }
                 }
             }
         } else if (opcao == OPCAO_ENCERRAR) {
