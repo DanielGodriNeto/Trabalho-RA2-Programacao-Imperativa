@@ -181,8 +181,7 @@ static NoCategoria *escolher_categoria(NoCategoria *inicio)
     int identificador = 0;
     NoCategoria *encontrada = NULL;
 
-    listar_categorias(inicio);
-    if (ler_inteiro_seguro("Informe o numero da categoria [1-15]: ", &identificador)) {
+    if (ler_inteiro_seguro("Informe o numero da categoria [1-15] (a opcao 1 mostra a lista): ", &identificador) == 1) {
         encontrada = buscar_categoria(inicio, (CategoriaAlimento)identificador);
         if (encontrada == NULL) {
             printf("Categoria %d inexistente (ou ja removida).\n", identificador);
