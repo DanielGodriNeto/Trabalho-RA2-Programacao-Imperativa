@@ -220,8 +220,7 @@ static void listar_decrescente(const NoCategoria *categoria, const NoArvore *arv
  * usando a busca com poda na arvore indicada.
  */
 static void listar_intervalo(const NoCategoria *categoria, const NoArvore *arvore, const char *rotulo) {
-    float minimo = 0.0f;
-    float maximo = 0.0f;
+    float minimo = 0.0f, maximo = 0.0f;
     int encontrados;
 
     if (ler_decimal_seguro("Valor minimo: ", &minimo) && ler_decimal_seguro("Valor maximo: ", &maximo)) {

@@ -54,12 +54,9 @@ int linha_csv_para_registro(const char *linha, RegistroAlimento *registro) {
     float energia = 0.0f;
     float proteina = 0.0f;
     char descricao[TAMANHO_DESCRICAO];
-    int campos_lidos;
-    int campos_restantes = 0;
+    int campos_lidos, campos_restantes = 0;
     int valida = 0;
-    int i = 0;
-    int j = 0;
-    int k;
+    int i = 0, j = 0, k;
     unsigned char *bytes;
 
     descricao[0] = '\0';
