@@ -17,16 +17,15 @@
  *             do chamador; tamanho - capacidade do buffer.
  * Retorna: 1 se leu uma linha; 0 se a entrada terminou (EOF).
  */
-int ler_linha_segura(const char *mensagem, char *destino, size_t tamanho)
+int ler_linha_segura(const char *mensagem, char *destino, int tamanho)
 {
     int leu = 0;
-    size_t comprimento;
+    int comprimento;
 
     if (mensagem != NULL) {
         printf("%s", mensagem);
-        fflush(stdout);
     }
-    if (fgets(destino, (int)tamanho, stdin) != NULL) {
+    if (fgets(destino, tamanho, stdin) != NULL) {
         comprimento = strlen(destino);
         while (comprimento > 0 && (destino[comprimento - 1] == '\n' || destino[comprimento - 1] == '\r')) {
             destino[comprimento - 1] = '\0';
@@ -40,20 +39,30 @@ int ler_linha_segura(const char *mensagem, char *destino, size_t tamanho)
 }
 
 /*
- * Converte um texto em inteiro com strtol, validando que o texto inteiro
- * e numerico. E o unico lugar do programa que usa strtol para inteiros.
+ * Converte um texto em inteiro: confere sinal opcional e de 1 a 9 digitos
+ * (cabe em int) e converte com atoi. E o unico lugar que converte inteiros.
  * Parametros: texto - texto a converter; valor - destino do resultado.
  * Retorna: 1 se o texto e um inteiro valido; 0 caso contrario.
  */
 int texto_para_inteiro(const char *texto, int *valor)
 {
-    char *fim = NULL;
-    long convertido = strtol(texto, &fim, 10);
-    int valido = 0;
+    int inicio = 0;
+    int i;
+    int valido = 1;
 
-    if (fim != texto && *fim == '\0') {
-        *valor = (int)convertido;
-        valido = 1;
+    if (texto[0] == '-' || texto[0] == '+') {
+        inicio = 1;
+    }
+    for (i = inicio; texto[i] != '\0'; i++) {
+        if (texto[i] < '0' || texto[i] > '9') {
+            valido = 0;
+        }
+    }
+    if (i - inicio < 1 || i - inicio > 9) {
+        valido = 0;
+    }
+    if (valido) {
+        *valor = atoi(texto);
     }
     return valido;
 }
@@ -68,34 +77,49 @@ int ler_inteiro_seguro(const char *mensagem, int *valor)
     char entrada[TAMANHO_ENTRADA];
     int resultado = -1;
 
-    if (ler_linha_segura(mensagem, entrada, sizeof(entrada))) {
+    if (ler_linha_segura(mensagem, entrada, TAMANHO_ENTRADA)) {
         resultado = texto_para_inteiro(entrada, valor);
     }
     return resultado;
 }
 
 /*
- * Le um decimal com strtod; troca virgula por ponto antes da conversao.
+ * Le um decimal: troca virgula por ponto, confere o formato (sinal opcional,
+ * digitos e no maximo um ponto) e converte com sscanf.
  * Parametros: mensagem - prompt; valor - destino do resultado.
  * Retorna: 1 se valido; 0 se invalido ou EOF.
  */
 int ler_decimal_seguro(const char *mensagem, float *valor)
 {
     char entrada[TAMANHO_ENTRADA];
-    char *fim = NULL;
-    char *virgula = NULL;
-    double convertido = 0.0;
+    int inicio = 0;
+    int i;
+    int pontos = 0;
+    int digitos = 0;
     int valido = 0;
 
-    if (ler_linha_segura(mensagem, entrada, sizeof(entrada))) {
-        virgula = strchr(entrada, ',');
-        if (virgula != NULL) {
-            *virgula = '.';
+    if (ler_linha_segura(mensagem, entrada, TAMANHO_ENTRADA)) {
+        valido = 1;
+        if (entrada[0] == '-' || entrada[0] == '+') {
+            inicio = 1;
         }
-        convertido = strtod(entrada, &fim);
-        if (fim != entrada && *fim == '\0') {
-            *valor = (float)convertido;
-            valido = 1;
+        for (i = inicio; entrada[i] != '\0'; i++) {
+            if (entrada[i] == ',') {
+                entrada[i] = '.';
+            }
+            if (entrada[i] == '.') {
+                pontos++;
+            } else if (entrada[i] >= '0' && entrada[i] <= '9') {
+                digitos++;
+            } else {
+                valido = 0;
+            }
+        }
+        if (digitos == 0 || pontos > 1) {
+            valido = 0;
+        }
+        if (valido) {
+            sscanf(entrada, "%f", valor);
         }
     }
     return valido;
@@ -270,7 +294,7 @@ static void tratar_remocao_alimento(NoCategoria **categorias, int *dados_modific
 
     if (escolhida != NULL) {
         listar_alimentos_alfabetico(escolhida);
-        if (ler_linha_segura("Numero ou descricao exata do alimento: ", entrada, sizeof(entrada))) {
+        if (ler_linha_segura("Numero ou descricao exata do alimento: ", entrada, TAMANHO_ENTRADA)) {
             if (texto_para_inteiro(entrada, &numero)) {
                 removido = remover_alimento(escolhida, numero, NULL);
             } else {

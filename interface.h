@@ -6,11 +6,10 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include <stddef.h>
 #include "estruturas.h"
 
 /* Le uma linha do teclado sem estourar o buffer; devolve 0 em fim de entrada (EOF). */
-int ler_linha_segura(const char *mensagem, char *destino, size_t tamanho);
+int ler_linha_segura(const char *mensagem, char *destino, int tamanho);
 
 /* Converte texto em inteiro; devolve 1 se o texto inteiro e numerico, 0 caso contrario. */
 int texto_para_inteiro(const char *texto, int *valor);
