@@ -11,7 +11,7 @@
 /*
  * Encerra o programa quando malloc/calloc falha (memoria insuficiente).
  */
-static void abortar_sem_memoria(void) {
+static void abortar_sem_memoria() {
     fprintf(stderr, "Erro critico: memoria insuficiente (malloc/calloc falhou).\n");
     exit(1);
 }

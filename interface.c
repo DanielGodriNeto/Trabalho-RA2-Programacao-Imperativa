@@ -132,7 +132,7 @@ static void imprimir_alimento(const RegistroAlimento *alimento) {
 }
 
 /* Exibe o menu principal com as 9 opcoes. */
-static void exibir_menu(void) {
+static void exibir_menu() {
     printf("\n===== TACO - MENU =====\n");
     printf("1 - Listar categorias\n");
     printf("2 - Listar alimentos de uma categoria (ordem alfabetica)\n");

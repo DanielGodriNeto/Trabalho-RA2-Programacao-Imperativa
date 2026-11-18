@@ -10,7 +10,7 @@
  * Funcao principal do Programa 2.
  * Retorna: 0 ao terminar normalmente (falhas criticas usam exit nas rotinas chamadas).
  */
-int main(void) {
+int main() {
     NoCategoria *categorias = carregar_dados_bin(ARQUIVO_DADOS_BIN);
     int dados_modificados = 0;
     int total_gravado = 0;
