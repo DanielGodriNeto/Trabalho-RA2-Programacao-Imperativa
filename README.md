@@ -1,73 +1,55 @@
-# Trabalho do RA2 — Programação Imperativa
+# Trabalho do RA2 — Programação Imperativa (Tabela TACO)
 
-Trabalho da disciplina **Programação Imperativa** (Prof. Alcides Calsavara), em **C (C99)**.
-Usa a **Tabela Brasileira de Composição de Alimentos (TACO, 4ª edição)**: 597 alimentos em 15 categorias.
+Implementação em C (padrão C99) dos programas **P1** e **P2** sobre os 597 alimentos e 15 categorias da **Tabela Brasileira de Composição de Alimentos (TACO — 4ª edição ampliada e revisada)**.
 
-## O que o trabalho pede
+---
 
-| Etapa | O que fazer | Onde está |
-|-------|-------------|-----------|
-| A | Transcrever número, descrição, energia (kcal), proteína (g) e categoria dos 597 alimentos para um CSV | `alimentos.csv` (gerado por `extrair_taco.py`) |
-| B | **P1**: ler o CSV e gravar tudo em binário no arquivo `dados.bin` | `P1.c` |
-| C | **P2**: ler `dados.bin`, montar as estruturas na memória e oferecer um menu | `P2.c` |
+## 1. Organização dos Arquivos
 
-### Estruturas montadas pelo P2
+- `alimento.h` / `alimento.c`: definição do enumerado `CategoriaAlimento` (1 a 15), da estrutura `RegistroAlimento` (144 bytes, unidade gravada em `dados.bin`), conversão do enumerado em texto e leitura de `alimentos.csv` para gravação binária.
+- `estruturas.h` / `estruturas.c`: estruturas dinâmicas na memória *heap* (`NoCategoria`, `NoAlimento`, `NoArvore`), inserção diretamente em ordem alfabética durante a construção das listas ligadas, árvores binárias de indexação por energia (kcal) e por proteína (g), buscas com poda por intervalo, remoções, regravação de `dados.bin` e liberação completa da memória (`free`).
+- `interface.h` / `interface.c`: menu interativo do Programa 2 (9 opções) e funções auxiliares de leitura segura (`fgets` + `strtol`/`strtod`).
+- `P1.c`: contém exclusivamente a função `main` do Programa 1 (`alimentos.csv` → `dados.bin`).
+- `P2.c`: contém exclusivamente a função `main` do Programa 2 (carrega `dados.bin`, executa o menu, atualiza `dados.bin` se houve remoção e libera 100% da memória *heap*).
+- `Makefile`: compilação com `gcc -Wall -Wextra -pedantic -std=c99`.
+- `alimentos.csv`: base com os 597 alimentos extraídos da Tabela 1 da TACO (`numero;descricao;energia_kcal;proteina_g;categoria_id`).
+- `extrair_taco.py`: script Python que extrai os 597 alimentos do PDF oficial da TACO pelas coordenadas horizontais das colunas.
 
-```
-Lista de categorias (ordem alfabética)
-  └─ cada categoria tem sua lista de alimentos (ordem alfabética)
+---
 
-Árvore binária por energia   ─┐  cada nó guarda a chave (kcal ou g)
-Árvore binária por proteína  ─┘  e um ponteiro para o nó da lista
-```
-
-As listas são montadas **já em ordem** (inserção ordenada, sem algoritmo de ordenação).
-
-### Menu do P2
-
-1. Listar categorias
-2. Listar alimentos de uma categoria (alfabética)
-3. Listar alimentos por energia, do maior para o menor
-4. Listar alimentos por proteína, da maior para a menor
-5. Listar alimentos com energia dentro de um intervalo
-6. Listar alimentos com proteína dentro de um intervalo
-7. Remover uma categoria (e seus alimentos)
-8. Remover um alimento
-9. Encerrar (se algo foi removido, regrava `dados.bin`)
-
-### Regras de código do enunciado
-
-1. Categorias em um `enum`
-2. Código dividido em funções
-3. Arquivos `.h` e `.c`; `P1.c` e `P2.c` só com a `main`
-4. Listas com `malloc`/`calloc`
-5. Toda a memória é liberada no fim (`free`)
-6. Alimentos inseridos já em ordem alfabética
-7. Categorias inseridas já em ordem alfabética
-8. Nó da árvore: chave + ponteiro para o nó da lista
-9. Sem `break` e sem `continue`
-10. Um único `return` por função
-11. Nomes de variáveis e funções significativos
-12. Código comentado
-
-## Arquivos
-
-| Arquivo | Conteúdo |
-|---------|----------|
-| `alimento.h` / `alimento.c` | `enum CategoriaAlimento`, registro gravado no `dados.bin` (144 bytes) e conversão CSV → binário |
-| `estruturas.h` / `estruturas.c` | listas, árvores, buscas, remoções, regravação do `dados.bin` e liberação da memória |
-| `interface.h` / `interface.c` | menu e leitura segura de entrada (`fgets` + `strtol`/`strtod`) |
-| `P1.c` | `main` do Programa 1 |
-| `P2.c` | `main` do Programa 2 |
-| `extrair_taco.py` | extrai os dados do PDF da TACO e gera o CSV |
-| `Makefile` | compila com `gcc -Wall -Wextra -pedantic -std=c99` |
-
-## Como compilar e rodar
+## 2. Compilação e Execução
 
 ```bash
-make          # Windows com MinGW: mingw32-make
-./P1          # gera dados.bin (597 registros = 85.968 bytes)
-./P2          # abre o menu
+# Compilar P1 e P2 (Linux/macOS: make | Windows MinGW: mingw32-make)
+make
+
+# Executar o Programa 1 (gera dados.bin com 597 registros = 85.968 bytes)
+./P1
+
+# Executar o Programa 2 (menu interativo com as 9 opcoes)
+./P2
 ```
 
-No Windows, rode `chcp 65001` antes do `P2.exe` para os acentos aparecerem certos.
+No Windows (PowerShell/CMD), execute `chcp 65001` antes de rodar `P2.exe` para exibir corretamente os caracteres UTF-8 acentuados.
+
+---
+
+## 3. Tratamento de Valores Especiais da Tabela TACO em `alimentos.csv`
+
+A Tabela 1 da TACO (4ª edição) utiliza símbolos não numéricos definidos na **nota de rodapé da página 68 do PDF oficial**. Para que todos os 597 alimentos possam ser armazenados em campos numéricos (`float energia_kcal` e `float proteina_g` em `RegistroAlimento`) e indexados nas árvores binárias de busca, adotou-se a convenção **`0.0`** para todos os campos não numéricos:
+
+1. **`NA` (Não Aplicável) → `0.0`**
+   - **Proteína em azeites e óleos (`#259`, `#260`, `#267` a `#272`)**: Azeite de dendê (`#259`), Azeite de oliva extra virgem (`#260`) e Óleos de babaçu, canola, girassol, milho, pequi e soja (`#267` a `#272`) possuem `884.0 kcal` de energia e `NA` na coluna de proteína (convertido para `0.0`).
+   - **Proteína em bebida destilada (`#472`)**: Cana, aguardente (`#472`) possui `216.0 kcal` e proteína `NA` (convertida para `0.0`).
+   - **Energia e proteína em sais (`#516` e `#517`)**: Sal dietético (`#516`) e Sal grosso (`#517`) possuem `NA` tanto em energia quanto em proteína na tabela oficial (ambos convertidos para `0.0`).
+
+2. **`Tr` (Traço) → `0.0`**
+   - Conforme a página 68 da TACO, `Tr` indica nutrientes presentes em quantidades vestigiais (abaixo do limite de quantificação ou arredondados para zero), como a proteína em `#258` (Uva, suco concentrado), `#263` a `#266` (Margarinas), `#473` (Cana, caldo de), entre outros. Todos os campos `Tr` foram convertidos para `0.0`.
+
+3. **`*` (Análises sendo reavaliadas) → `0.0`**
+   - Conforme a nota de rodapé da página 68 da TACO (*"\* as análises estão sendo reavaliadas"*), o PDF oficial da 4ª edição **não fornece valores numéricos** de energia nem de proteína (nem no corpo da tabela, nem no rodapé) para **4 alimentos**:
+     - `#450` — `Iogurte, sabor abacaxi` (Categoria 7: Leite e derivados)
+     - `#457` — `Leite, de vaca, desnatado, UHT` (Categoria 7: Leite e derivados)
+     - `#458` — `Leite, de vaca, integral` (Categoria 7: Leite e derivados)
+     - `#591` — `Coco, verde, cru` (Categoria 15: Nozes e sementes)
+   - Como os valores reais não constam no documento oficial da TACO, esses 4 registros tiveram energia e proteína preenchidas com `0.0`.
