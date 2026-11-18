@@ -52,3 +52,19 @@ A Tabela 1 da TACO (4ª edição) utiliza símbolos não numéricos definidos na
      - `#458` — `Leite, de vaca, integral` (Categoria 7: Leite e derivados)
      - `#591` — `Coco, verde, cru` (Categoria 15: Nozes e sementes)
    - Como os valores reais não constam no documento oficial da TACO, esses 4 registros tiveram energia e proteína preenchidas com `0.0`.
+
+---
+
+## 4. Funções usadas e conteúdo do curso
+
+Todas as funções de biblioteca usadas vêm do material do curso: `printf`, `fprintf`, `sscanf`, `fgets`, `fopen`, `fclose`, `fwrite`, `fread`, `exit`, `atoi`, `malloc`, `calloc`, `free`, `strlen`, `strcpy`, `strcmp`, `toupper`.
+
+Substituições feitas para sair do que o curso não ensina:
+
+| Antes | Agora |
+|---|---|
+| `strtol`, `strtod`, `strchr` | validação manual dos caracteres + `atoi` / `sscanf("%f")` |
+| `snprintf`, `memset` | `strcpy` e um laço que zera os bytes |
+| `tolower`, `fflush`, `size_t`, `EXIT_FAILURE` | `toupper`, removido, `int`, `exit(1)` |
+
+Ainda fora do conteúdo (não é função de biblioteca): o tratamento do byte `0xC3` do UTF-8, em `estruturas.c` (comparar letras acentuadas como a letra base) e em `interface.c` (alinhar colunas). O comentário no código explica o motivo.
