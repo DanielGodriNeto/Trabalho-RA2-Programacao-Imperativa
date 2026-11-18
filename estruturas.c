@@ -9,12 +9,6 @@
 #include "estruturas.h"
 
 /*
- * Letra base (sem acento) das letras latinas UTF-8 iniciadas por 0xC3.
- * Indexada por (segundo_byte - 0x80) & 0x1F.
- */
-static const char LETRAS_BASE_LATIN1[] = "aaaaaa?ceeeeiiiidnoooooxouuuuy?s";
-
-/*
  * Encerra o programa quando malloc/calloc falha (memoria insuficiente).
  */
 static void abortar_sem_memoria(void)
@@ -24,18 +18,48 @@ static void abortar_sem_memoria(void)
 }
 
 /*
- * Extrai o proximo caractere "logico" do texto, ja minusculo e sem acento,
- * e avanca o ponteiro (1 byte, ou 2 bytes para letras acentuadas UTF-8).
- * Parametro: texto - endereco do ponteiro de leitura (avancado aqui).
- * Retorna: codigo do caractere normalizado; 0 no fim do texto.
+ * Extrai o proximo caractere do texto ja convertido para letra minuscula e
+ * sem acento, avancando o ponteiro de leitura:
+ *  - Letras comuns (ASCII, 1 byte): usa tolower() e avanca 1 byte.
+ *  - Letras acentuadas em UTF-8 (2 bytes): no portugues, toda letra acentuada
+ *    comeca pelo byte 0xC3 seguido de um segundo byte que identifica a letra.
+ *    Se o segundo byte for maiusculo (0x80 a 0x9F, como 'A' ou 'O' acentuados),
+ *    soma-se 0x20 (32) para obter o equivalente minusculo, e entao mapeia-se
+ *    cada faixa de vogal acentuada (ou 'c' cedilha) para sua letra base sem
+ *    acento ('a', 'c', 'e', 'i', 'n', 'o', 'u'), avancando 2 bytes.
+ * Parametro: texto - endereco do ponteiro de leitura (avancado pela funcao).
+ * Retorna: codigo da letra minuscula sem acento, ou 0 no fim da string ('\0').
  */
 static int proximo_caractere_normalizado(const char **texto)
 {
     const unsigned char *posicao = (const unsigned char *)*texto;
+    unsigned char segundo_byte = 0;
     int caractere = 0;
 
-    if (posicao[0] == 0xC3 && posicao[1] >= 0x80 && posicao[1] <= 0xBF) {
-        caractere = LETRAS_BASE_LATIN1[(posicao[1] - 0x80) & 0x1F];
+    if (posicao[0] == 0xC3 && posicao[1] != '\0') {
+        segundo_byte = posicao[1];
+        /* Converte acentuada maiuscula (ex.: 'A', 'O') para minuscula (+32) */
+        if (segundo_byte >= 0x80 && segundo_byte <= 0x9F) {
+            segundo_byte = (unsigned char)(segundo_byte + 0x20);
+        }
+        /* Troca a letra acentuada minuscula pela letra base sem acento */
+        if (segundo_byte >= 0xA0 && segundo_byte <= 0xA5) {
+            caractere = 'a';   /* a com crase, agudo, circunflexo ou til */
+        } else if (segundo_byte == 0xA7) {
+            caractere = 'c';   /* c cedilha */
+        } else if (segundo_byte >= 0xA8 && segundo_byte <= 0xAB) {
+            caractere = 'e';   /* e com crase, agudo ou circunflexo */
+        } else if (segundo_byte >= 0xAC && segundo_byte <= 0xAF) {
+            caractere = 'i';   /* i acentuado */
+        } else if (segundo_byte == 0xB1) {
+            caractere = 'n';   /* n com til */
+        } else if (segundo_byte >= 0xB2 && segundo_byte <= 0xB6) {
+            caractere = 'o';   /* o com crase, agudo, circunflexo ou til */
+        } else if (segundo_byte >= 0xB9 && segundo_byte <= 0xBC) {
+            caractere = 'u';   /* u com agudo ou trema */
+        } else {
+            caractere = segundo_byte;
+        }
         *texto += 2;
     } else if (posicao[0] != '\0') {
         caractere = tolower(posicao[0]);
@@ -45,10 +69,16 @@ static int proximo_caractere_normalizado(const char **texto)
 }
 
 /*
- * Compara dois textos alfabeticamente, ignorando maiusculas e acentos.
- * Em caso de empate usa strcmp para desempate deterministico.
+ * Compara dois textos em ordem alfabetica do portugues (ignorando diferencas
+ * entre maiusculas/minusculas e acentos, para que "Oleo" fique em O e "Pao"
+ * fique antes de "Pastel").
+ * Passo a passo:
+ *  1. Extrai letra por letra de cada texto usando proximo_caractere_normalizado.
+ *  2. Enquanto as letras base forem iguais e a string nao terminar, avanca.
+ *  3. Calcula a diferenca entre as primeiras letras diferentes.
+ *  4. Se todas as letras base empatarem, usa strcmp como desempate final.
  * Parametros: texto_a, texto_b - strings terminadas em '\0'.
- * Retorna: <0 se a vem antes de b, 0 se iguais, >0 se a vem depois.
+ * Retorna: <0 se texto_a vem antes, 0 se iguais, >0 se texto_a vem depois.
  */
 int comparar_texto_alfabetico(const char *texto_a, const char *texto_b)
 {
@@ -108,8 +138,8 @@ NoCategoria *obter_ou_criar_categoria(NoCategoria **inicio, CategoriaAlimento ca
     } else {
         novo = (NoCategoria *)calloc(1, sizeof(NoCategoria));
         if (novo == NULL) {
-        abortar_sem_memoria();
-    }
+            abortar_sem_memoria();
+        }
         novo->categoria = categoria;
         snprintf(novo->nome, TAMANHO_NOME_CATEGORIA, "%s", nome);
         novo->proximo = *cursor;   /* o novo no aponta para o sucessor */
