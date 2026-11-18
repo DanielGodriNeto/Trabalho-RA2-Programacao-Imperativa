@@ -58,16 +58,41 @@ int linha_csv_para_registro(const char *linha, RegistroAlimento *registro)
     float proteina = 0.0f;
     char descricao[TAMANHO_DESCRICAO];
     int campos_lidos;
+    int campos_restantes = 0;
     int valida = 0;
+    int i = 0;
+    int j = 0;
+    int k;
+    unsigned char *bytes;
 
     descricao[0] = '\0';
-    campos_lidos = sscanf(linha, "%d;%127[^;];%f;%f;%d",
-                          &numero, descricao, &energia, &proteina, &categoria_id);
+    campos_lidos = sscanf(linha, "%d", &numero);
+    if (campos_lidos == 1) {
+        while (linha[i] != ';' && linha[i] != '\0') {
+            i++;
+        }
+        if (linha[i] == ';') {
+            i++;
+        }
+        while (j < TAMANHO_DESCRICAO - 1 && linha[i] != ';' && linha[i] != '\0') {
+            descricao[j] = linha[i];
+            j++;
+            i++;
+        }
+        descricao[j] = '\0';
+        if (linha[i] == ';' && j > 0) {
+            campos_restantes = sscanf(linha + i + 1, "%f;%f;%d",
+                                      &energia, &proteina, &categoria_id);
+        }
+    }
 
-    if (campos_lidos == 5 && categoria_id >= CATEGORIA_MINIMA && categoria_id <= CATEGORIA_MAXIMA) {
-        memset(registro, 0, sizeof(*registro));
+    if (campos_restantes == 3 && categoria_id >= CATEGORIA_MINIMA && categoria_id <= CATEGORIA_MAXIMA) {
+        bytes = (unsigned char *)registro;
+        for (k = 0; k < (int)sizeof(*registro); k++) {
+            bytes[k] = 0;
+        }
         registro->numero = numero;
-        snprintf(registro->descricao, TAMANHO_DESCRICAO, "%s", descricao);
+        strcpy(registro->descricao, descricao);
         registro->energia_kcal = energia;
         registro->proteina_g = proteina;
         registro->categoria = (CategoriaAlimento)categoria_id;
@@ -79,7 +104,7 @@ int linha_csv_para_registro(const char *linha, RegistroAlimento *registro)
 /*
  * Le o CSV linha a linha e grava cada registro com fwrite em dados.bin.
  * Parametros: caminho_csv - entrada; caminho_bin - saida.
- * Retorna: numero de registros gravados. Falha de abertura => exit(EXIT_FAILURE).
+ * Retorna: numero de registros gravados. Falha de abertura => exit(1).
  */
 int converter_csv_para_binario(const char *caminho_csv, const char *caminho_bin)
 {
@@ -91,13 +116,13 @@ int converter_csv_para_binario(const char *caminho_csv, const char *caminho_bin)
 
     if (arquivo_csv == NULL) {
         fprintf(stderr, "Erro: nao foi possivel abrir '%s'.\n", caminho_csv);
-        exit(EXIT_FAILURE);
+        exit(1);
     }
     arquivo_bin = fopen(caminho_bin, "wb");
     if (arquivo_bin == NULL) {
         fprintf(stderr, "Erro: nao foi possivel criar '%s'.\n", caminho_bin);
         fclose(arquivo_csv);
-        exit(EXIT_FAILURE);
+        exit(1);
     }
 
     while (fgets(linha, sizeof(linha), arquivo_csv) != NULL) {

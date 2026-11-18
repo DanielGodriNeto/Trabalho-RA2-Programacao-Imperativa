@@ -69,7 +69,7 @@ int linha_csv_para_registro(const char *linha, RegistroAlimento *registro);
  * Le o arquivo CSV e grava todos os registros em formato binario.
  * Parametros: caminho_csv - arquivo de entrada; caminho_bin - arquivo de saida.
  * Retorna: quantidade de registros gravados. Em caso de falha ao abrir
- * qualquer arquivo, encerra o programa com exit(EXIT_FAILURE).
+ * qualquer arquivo, encerra o programa com exit(1).
  */
 int converter_csv_para_binario(const char *caminho_csv, const char *caminho_bin);
 
